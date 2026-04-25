@@ -1,2 +1,2 @@
-# sap-documentation-orchestrator-public
-Public mirror of SAP documentation orchestrator app
+# sap-documentation-orchestrator
+SAP documentation orchestrator app
