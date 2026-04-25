@@ -1,0 +1,25 @@
+{
+  "module": "SD",
+  "anchor_field_mapping": {
+    "order_type": "AUART",
+    "customer_id": "KUNNR",
+    "sales_org": "VKORG",
+    "material_id": "MATNR",
+    "delivery_number": "VBELN",
+    "billing_number": "VBELN"
+  },
+  "process_families": {
+    "order_to_cash": {
+      "name": "Order to Cash",
+      "description": "Sales order creation, delivery, and billing process",
+      "transactions": [
+        {"code": "VA01", "description": "Create Sales Order", "keywords": ["crear pedido", "create order"]}
+      ],
+      "query_groups": [
+        "sales_order_header",
+        "sales_order_item",
+        "customer_master"
+      ]
+    }
+  }
+}

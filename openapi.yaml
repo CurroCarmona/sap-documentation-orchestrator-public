@@ -1,0 +1,107 @@
+openapi: "3.0.3"
+
+info:
+  title: BBP Automation API
+  description: Genera BBP, escenarios de prueba y Functional Designs para S/4HANA
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:3000
+    description: Local
+
+paths:
+  /api/swarm/load-excel:
+    get:
+      operationId: loadExcel
+      summary: Carga el tracker Excel y devuelve la lista de procesos L3
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      responses:
+        "200":
+          description: Lista de L3 disponibles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  l3List:
+                    type: array
+                    items:
+                      type: string
+                  triggerable:
+                    type: array
+                    items:
+                      type: string
+                  scenariosByL3:
+                    type: object
+
+  /api/swarm/generate-bbp:
+    post:
+      operationId: generateBBP
+      summary: Genera un documento BBP para un proceso L3
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [l3Name]
+              properties:
+                l3Name:
+                  type: string
+                  description: Nombre exacto del proceso L3
+                selectedScenarios:
+                  type: array
+                  items:
+                    type: string
+                  description: IDs de escenarios a incluir (vacío = todos estado 10)
+                uploadToSharePoint:
+                  type: boolean
+                  default: true
+                  description: Si true, sube el archivo generado a SharePoint.
+      responses:
+        "200":
+          description: BBP generado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  docxPath:
+                    type: string
+                  tracePath:
+                    type: string
+                  summary:
+                    type: object
+                  upload:
+                    type: object
+                    properties:
+                      attempted:
+                        type: boolean
+                      uploaded:
+                        type: boolean
+                      folder:
+                        type: string
+                      webUrl:
+                        type: string
+                      message:
+                        type: string
+
+components:
+  securitySchemes:
+    SwarmApiKeyBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: APIKey
+    SwarmApiKeyHeader:
+      type: apiKey
+      in: header
+      name: x-api-key
