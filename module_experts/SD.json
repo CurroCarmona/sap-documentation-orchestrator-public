@@ -38,6 +38,114 @@
         "strategy": "suppress",
         "send_to_llm": "never",
         "show_to_tester": "never"
+      },
+      {
+        "field": "MATNR",
+        "category": "material_id",
+        "strategy": "token",
+        "token_prefix": "MAT_",
+        "send_to_llm": "token",
+        "show_to_tester": "real_if_local"
+      },
+      {
+        "field": "ARKTX",
+        "category": "material_description",
+        "strategy": "generalize",
+        "send_to_llm": "generalized",
+        "show_to_tester": "generalized"
+      },
+      {
+        "field": "MAKTX",
+        "category": "material_description",
+        "strategy": "generalize",
+        "send_to_llm": "generalized",
+        "show_to_tester": "generalized"
+      },
+      {
+        "field": "NETPR",
+        "category": "price",
+        "strategy": "range",
+        "send_to_llm": "range",
+        "show_to_tester": "real_if_local"
+      },
+      {
+        "field": "KWMENG",
+        "category": "quantity",
+        "strategy": "range",
+        "send_to_llm": "range",
+        "show_to_tester": "real_if_local"
+      },
+      {
+        "field": "VBELN",
+        "category": "document_number",
+        "strategy": "token",
+        "token_prefix": "DOC_",
+        "send_to_llm": "token",
+        "show_to_tester": "real_if_local"
+      },
+      {
+        "field": "LIFNR",
+        "category": "vendor_id",
+        "strategy": "token",
+        "token_prefix": "VEND_",
+        "send_to_llm": "token",
+        "show_to_tester": "real_if_local"
+      },
+      {
+        "field": "ZTERM",
+        "category": "payment_terms",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "AUART",
+        "category": "order_type",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "VKORG",
+        "category": "sales_org",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "VTWEG",
+        "category": "distribution_channel",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "SPART",
+        "category": "division",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "WERKS",
+        "category": "plant",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "LGORT",
+        "category": "storage_location",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
+      },
+      {
+        "field": "INCO1",
+        "category": "incoterm",
+        "strategy": "keep",
+        "send_to_llm": "real",
+        "show_to_tester": "real"
       }
     ],
     "range_bands": {

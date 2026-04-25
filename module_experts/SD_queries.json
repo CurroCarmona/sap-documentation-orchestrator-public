@@ -13,13 +13,353 @@
       "name": "Order to Cash",
       "description": "Sales order creation, delivery, and billing process",
       "transactions": [
-        {"code": "VA01", "description": "Create Sales Order", "keywords": ["crear pedido", "create order"]}
+        {"code": "VA01", "description": "Create Sales Order", "keywords": ["crear pedido", "create order", "new order", "alta pedido"]},
+        {"code": "VA02", "description": "Change Sales Order", "keywords": ["modificar pedido", "change order", "edit order"]},
+        {"code": "VA03", "description": "Display Sales Order", "keywords": ["visualizar pedido", "display order", "view order"]}
       ],
       "query_groups": [
         "sales_order_header",
         "sales_order_item",
+        "customer_master",
+        "material_master",
+        "pricing_conditions"
+      ]
+    },
+    "delivery": {
+      "name": "Outbound Delivery",
+      "description": "Delivery creation, picking, and goods issue",
+      "transactions": [
+        {"code": "VL01N", "description": "Create Outbound Delivery", "keywords": ["crear entrega", "create delivery", "new delivery"]},
+        {"code": "VL02N", "description": "Change Outbound Delivery", "keywords": ["modificar entrega", "change delivery"]},
+        {"code": "VL06O", "description": "Outbound Delivery Monitor", "keywords": ["monitor entregas", "delivery monitor"]}
+      ],
+      "query_groups": [
+        "delivery_header",
+        "delivery_item",
+        "customer_master",
+        "material_master"
+      ]
+    },
+    "billing": {
+      "name": "Billing",
+      "description": "Invoice creation and processing",
+      "transactions": [
+        {"code": "VF01", "description": "Create Billing Document", "keywords": ["crear factura", "create invoice", "new billing"]},
+        {"code": "VF02", "description": "Change Billing Document", "keywords": ["modificar factura", "change invoice"]},
+        {"code": "VF03", "description": "Display Billing Document", "keywords": ["visualizar factura", "display invoice"]}
+      ],
+      "query_groups": [
+        "billing_header",
+        "billing_item",
         "customer_master"
       ]
+    },
+    "quotation": {
+      "name": "Quotation",
+      "description": "Quotation creation and management",
+      "transactions": [
+        {"code": "VA21", "description": "Create Quotation", "keywords": ["crear oferta", "create quotation", "new quote"]},
+        {"code": "VA22", "description": "Change Quotation", "keywords": ["modificar oferta", "change quotation"]},
+        {"code": "VA23", "description": "Display Quotation", "keywords": ["visualizar oferta", "display quotation"]}
+      ],
+      "query_groups": [
+        "quotation_header",
+        "quotation_item",
+        "customer_master",
+        "material_master"
+      ]
+    },
+    "output_determination": {
+      "name": "Output Determination",
+      "description": "Configure output types and determination for documents",
+      "transactions": [
+        {"code": "VB13", "description": "Output Determination Analysis", "keywords": ["determina salida", "determina sku", "output determination", "output type", "area de venta", "sales area", "document output", "configurar salida"]}
+      ],
+      "query_groups": [
+        "sales_order_header",
+        "customer_master"
+      ]
+    }
+  },
+  "query_groups": {
+    "sales_order_header": {
+      "id": "sales_order_header",
+      "description": "Cabecera de pedido de venta",
+      "table": "VBAK",
+      "priority": "mandatory",
+      "fields": [
+        "VBELN",
+        "AUART",
+        "VKORG",
+        "VTWEG",
+        "SPART",
+        "KUNNR",
+        "ERDAT",
+        "ERNAM",
+        "VKBUR",
+        "VKGRP"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["AUART", "VKORG", "KUNNR"],
+        "date_field": "ERDAT",
+        "date_range_days": 90,
+        "mandatory_filters": ["AUART"]
+      },
+      "sql_template": "SELECT {fields} FROM VBAK WHERE {filters} ORDER BY ERDAT DESC"
+    },
+    "sales_order_item": {
+      "id": "sales_order_item",
+      "description": "Ítems de pedido de venta",
+      "table": "VBAP",
+      "priority": "mandatory",
+      "depends_on": "sales_order_header",
+      "join_key": "VBELN",
+      "fields": [
+        "VBELN",
+        "POSNR",
+        "MATNR",
+        "ARKTX",
+        "KWMENG",
+        "VRKME",
+        "NETPR",
+        "WERKS",
+        "LGORT",
+        "PSTYV"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["VBELN"],
+        "mandatory_filters": ["VBELN"]
+      },
+      "sql_template": "SELECT {fields} FROM VBAP WHERE {filters}"
+    },
+    "customer_master": {
+      "id": "customer_master",
+      "description": "Datos maestros de cliente",
+      "table": "KNA1",
+      "priority": "mandatory",
+      "fields": [
+        "KUNNR",
+        "LAND1",
+        "REGIO",
+        "STRAS",
+        "ORT01"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["KUNNR"]
+      },
+      "sql_template": "SELECT {fields} FROM KNA1 WHERE {filters}",
+      "join_tables": [
+        {
+          "table": "KNVV",
+          "description": "Datos de ventas del cliente",
+          "join_on": "KUNNR",
+          "fields": [
+            "VKORG",
+            "VTWEG",
+            "SPART",
+            "ZTERM",
+            "INCO1",
+            "INCO2",
+            "KALKS"
+          ]
+        }
+      ]
+    },
+    "material_master": {
+      "id": "material_master",
+      "description": "Datos maestros de material",
+      "table": "MARA",
+      "priority": "optional",
+      "fields": [
+        "MATNR",
+        "MTART",
+        "MATKL",
+        "MEINS"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["MATNR"]
+      },
+      "sql_template": "SELECT {fields} FROM MARA WHERE {filters}",
+      "join_tables": [
+        {
+          "table": "MAKT",
+          "description": "Textos de material",
+          "join_on": "MATNR",
+          "fields": ["MAKTX", "SPRAS"]
+        },
+        {
+          "table": "MVKE",
+          "description": "Datos de ventas de material",
+          "join_on": "MATNR",
+          "fields": [
+            "VKORG",
+            "VTWEG",
+            "PRODH",
+            "PRAT1"
+          ]
+        }
+      ]
+    },
+    "pricing_conditions": {
+      "id": "pricing_conditions",
+      "description": "Condiciones de precio",
+      "table": "KONV",
+      "priority": "optional",
+      "depends_on": "sales_order_header",
+      "join_key": "KNUMV",
+      "fields": [
+        "KNUMV",
+        "KPOSN",
+        "KSCHL",
+        "KBETR",
+        "WAERS"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["KNUMV"]
+      },
+      "sql_template": "SELECT {fields} FROM KONV WHERE {filters}"
+    },
+    "delivery_header": {
+      "id": "delivery_header",
+      "description": "Cabecera de entrega",
+      "table": "LIKP",
+      "priority": "mandatory",
+      "fields": [
+        "VBELN",
+        "LFART",
+        "VSTEL",
+        "VKORG",
+        "KUNNR",
+        "ERDAT",
+        "WADAT",
+        "LFDAT"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["LFART", "VSTEL", "KUNNR"],
+        "date_field": "ERDAT",
+        "date_range_days": 90
+      },
+      "sql_template": "SELECT {fields} FROM LIKP WHERE {filters} ORDER BY ERDAT DESC"
+    },
+    "delivery_item": {
+      "id": "delivery_item",
+      "description": "Ítems de entrega",
+      "table": "LIPS",
+      "priority": "mandatory",
+      "depends_on": "delivery_header",
+      "join_key": "VBELN",
+      "fields": [
+        "VBELN",
+        "POSNR",
+        "MATNR",
+        "ARKTX",
+        "LFIMG",
+        "VRKME",
+        "WERKS",
+        "LGORT",
+        "VGBEL",
+        "VGPOS"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["VBELN"],
+        "mandatory_filters": ["VBELN"]
+      },
+      "sql_template": "SELECT {fields} FROM LIPS WHERE {filters}"
+    },
+    "billing_header": {
+      "id": "billing_header",
+      "description": "Cabecera de factura",
+      "table": "VBRK",
+      "priority": "mandatory",
+      "fields": [
+        "VBELN",
+        "FKART",
+        "FKDAT",
+        "VKORG",
+        "VTWEG",
+        "SPART",
+        "KUNRG",
+        "KUNAG",
+        "ERDAT",
+        "NETWR",
+        "WAERK"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["FKART", "VKORG", "KUNRG"],
+        "date_field": "ERDAT",
+        "date_range_days": 90
+      },
+      "sql_template": "SELECT {fields} FROM VBRK WHERE {filters} ORDER BY ERDAT DESC"
+    },
+    "billing_item": {
+      "id": "billing_item",
+      "description": "Ítems de factura",
+      "table": "VBRP",
+      "priority": "mandatory",
+      "depends_on": "billing_header",
+      "join_key": "VBELN",
+      "fields": [
+        "VBELN",
+        "POSNR",
+        "MATNR",
+        "ARKTX",
+        "FKIMG",
+        "VRKME",
+        "NETWR",
+        "WERKS",
+        "AUBEL",
+        "AUPOS"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["VBELN"],
+        "mandatory_filters": ["VBELN"]
+      },
+      "sql_template": "SELECT {fields} FROM VBRP WHERE {filters}"
+    },
+    "quotation_header": {
+      "id": "quotation_header",
+      "description": "Cabecera de oferta",
+      "table": "VBAK",
+      "priority": "mandatory",
+      "fields": [
+        "VBELN",
+        "AUART",
+        "VKORG",
+        "VTWEG",
+        "SPART",
+        "KUNNR",
+        "ERDAT",
+        "BNDDT"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["AUART", "VKORG", "KUNNR"],
+        "date_field": "ERDAT",
+        "date_range_days": 180,
+        "mandatory_filters": ["AUART"]
+      },
+      "sql_template": "SELECT {fields} FROM VBAK WHERE AUART IN ('AG', 'QT') AND {filters} ORDER BY ERDAT DESC"
+    },
+    "quotation_item": {
+      "id": "quotation_item",
+      "description": "Ítems de oferta",
+      "table": "VBAP",
+      "priority": "mandatory",
+      "depends_on": "quotation_header",
+      "join_key": "VBELN",
+      "fields": [
+        "VBELN",
+        "POSNR",
+        "MATNR",
+        "ARKTX",
+        "KWMENG",
+        "VRKME",
+        "NETPR"
+      ],
+      "filter_strategy": {
+        "anchor_fields": ["VBELN"],
+        "mandatory_filters": ["VBELN"]
+      },
+      "sql_template": "SELECT {fields} FROM VBAP WHERE {filters}"
     }
   }
 }
