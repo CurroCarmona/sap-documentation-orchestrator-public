@@ -95,6 +95,509 @@ paths:
                       message:
                         type: string
 
+  /api/swarm/generate-scenarios:
+    post:
+      operationId: generateScenarios
+      summary: Genera escenarios, scripts y variants para un proceso L3/L4
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [l3]
+              properties:
+                l1:
+                  type: string
+                l2:
+                  type: string
+                l3:
+                  type: string
+                l4:
+                  type: string
+                workstream:
+                  type: string
+                sourceType:
+                  type: string
+                  enum: [supporting_only, supporting_plus_fd, fd_only]
+                  default: supporting_only
+                supportingDocs:
+                  type: array
+                  items:
+                    type: string
+                fdFiles:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        properties:
+                          name:
+                            type: string
+                          path:
+                            type: string
+                dedupeMode:
+                  type: string
+                  enum: [strict_transaction, flexible_transaction_intent]
+                scenarioCasePolicy:
+                  type: string
+                  enum: [positive_only, positive_and_negative]
+      responses:
+        "200":
+          description: Escenarios generados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  count:
+                    type: integer
+                  scenarios:
+                    type: array
+                    items:
+                      type: object
+                  coverage:
+                    type: object
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                  tracePath:
+                    type: string
+
+  /api/swarm/generate-fd:
+    post:
+      operationId: generateFD
+      summary: Genera un Functional Design para un programa ABAP o fuente DF
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [programName]
+              properties:
+                programName:
+                  type: string
+                programPath:
+                  type: string
+                sourceType:
+                  type: string
+                  enum: [abap, df]
+                  default: abap
+                uploadToSharePoint:
+                  type: boolean
+                  default: true
+                  description: Si true, sube el FD generado a SharePoint.
+      responses:
+        "200":
+          description: FD generado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  fdPath:
+                    type: string
+                  functionalName:
+                    type: string
+                  tracePath:
+                    type: string
+                  upload:
+                    type: object
+                    properties:
+                      attempted:
+                        type: boolean
+                      uploaded:
+                        type: boolean
+                      folder:
+                        type: string
+                      webUrl:
+                        type: string
+                      message:
+                        type: string
+
+  /api/swarm/export-scenarios:
+    post:
+      operationId: exportScenarios
+      summary: Exporta escenarios a Excel y opcionalmente sube el archivo a SharePoint
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scenarios]
+              properties:
+                scenarios:
+                  type: array
+                  items:
+                    type: object
+                uploadToSharePoint:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Excel exportado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  path:
+                    type: string
+                  count:
+                    type: integer
+                  upload:
+                    type: object
+                    properties:
+                      attempted:
+                        type: boolean
+                      uploaded:
+                        type: boolean
+                      folder:
+                        type: string
+                      webUrl:
+                        type: string
+                      message:
+                        type: string
+
+  /api/kpi:
+    get:
+      operationId: getKPIs
+      summary: Devuelve KPIs de cobertura y estado del tracker
+      responses:
+        "200":
+          description: KPIs actuales
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalScenarios:
+                    type: integer
+                  byModule:
+                    type: object
+                  fdPrograms:
+                    type: object
+
+  /api/fd/programs:
+    get:
+      operationId: listFDPrograms
+      summary: Lista programas ABAP con su estado de FD
+      parameters:
+        - in: query
+          name: source
+          required: false
+          schema:
+            type: string
+            enum: [abap, df]
+            default: abap
+      responses:
+        "200":
+          description: Lista de programas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                  programs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        path:
+                          type: string
+                        hasFD:
+                          type: boolean
+                        fdPath:
+                          type: string
+
+  /api/swarm/queue-job:
+    post:
+      operationId: queueJob
+      summary: Encola un job de generación de escenarios para ser procesado por AlexandrIA
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [l3]
+              properties:
+                l1:
+                  type: string
+                l2:
+                  type: string
+                l3:
+                  type: string
+                  description: Nombre del proceso L3
+                l4:
+                  type: string
+                workstream:
+                  type: string
+                sourceType:
+                  type: string
+                  enum: [supporting_only, supporting_plus_fd, fd_only]
+                  default: supporting_only
+                supportingDocs:
+                  type: array
+                  items:
+                    type: string
+                fdFiles:
+                  type: array
+                  items:
+                    type: object
+                dedupeMode:
+                  type: string
+                scenarioCasePolicy:
+                  type: string
+                expertPrompt:
+                  type: string
+      responses:
+        "200":
+          description: Job encolado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  jobId:
+                    type: string
+
+  /api/swarm/pending-job:
+    get:
+      operationId: getPendingJob
+      summary: Devuelve el siguiente job pendiente de procesar (para uso de AlexandrIA)
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      responses:
+        "200":
+          description: Siguiente job pendiente o null si no hay ninguno
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  job:
+                    description: Null si no hay jobs pendientes
+                    nullable: true
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                      status:
+                        type: string
+                      createdAt:
+                        type: string
+                      payload:
+                        type: object
+                      excelContext:
+                        type: object
+
+  /api/swarm/submit-results:
+    post:
+      operationId: submitResults
+      summary: AlexandrIA entrega los escenarios generados para un job
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId, scenarios]
+              properties:
+                jobId:
+                  type: string
+                  description: ID del job recibido en getPendingJob
+                scenarios:
+                  type: array
+                  items:
+                    type: object
+                  description: Array de escenarios generados
+                coverage:
+                  type: object
+                tracePath:
+                  type: string
+      responses:
+        "200":
+          description: Resultados guardados y exportados a Excel
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  jobId:
+                    type: string
+                  scenariosCount:
+                    type: integer
+                  exportPath:
+                    type: string
+
+  /api/swarm/job-status/{jobId}:
+    get:
+      operationId: getJobStatus
+      summary: Consulta el estado de un job (para polling desde la UI)
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Estado actual del job
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending, processing, done, error]
+                  createdAt:
+                    type: string
+                  result:
+                    type: object
+                  error:
+                    type: string
+
+  /api/swarm/requeue-job/{jobId}:
+    post:
+      operationId: requeueJob
+      summary: Reencola un job no finalizado (recuperacion manual en pruebas)
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job reenviado a cola pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+
+  /api/swarm/complete-empty/{jobId}:
+    post:
+      operationId: completeEmptyJob
+      summary: Marca un job como completado sin escenarios (smoke test de tooling)
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job completado en vacio
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+                  scenariosCount:
+                    type: integer
+                  exportPath:
+                    type: string
+                    nullable: true
+
+  /api/swarm/chat:
+    post:
+      operationId: swarmChat
+      summary: Chat bridge para conversación contextual con el asistente
+      security:
+        - SwarmApiKeyBearer: []
+        - SwarmApiKeyHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                session_id:
+                  type: string
+                message:
+                  type: string
+                context:
+                  type: object
+      responses:
+        "200":
+          description: Respuesta del asistente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  session_id:
+                    type: string
+                  answer:
+                    type: string
+
 components:
   securitySchemes:
     SwarmApiKeyBearer:
