@@ -1,5 +1,17 @@
+/**
+ * Server-Sent Events (SSE) client for streaming responses
+ * Unified implementation to avoid duplication between integrations.js and generate.js
+ */
+
 import { apiUrl } from "./shared.js";
 
+/**
+ * Read Server-Sent Events from a streaming endpoint
+ * @param {string} endpoint - API endpoint path
+ * @param {object} payload - Request payload
+ * @param {function} onEvent - Callback for each event: (eventData) => void | Promise<void>
+ * @returns {Promise<void>}
+ */
 export async function readSSE(endpoint, payload, onEvent) {
   const res = await fetch(apiUrl(endpoint), {
     method: "POST",
@@ -38,10 +50,35 @@ export async function readSSE(endpoint, payload, onEvent) {
       try {
         eventPayload = JSON.parse(raw);
       } catch (_err) {
+        // If not valid JSON, treat as plain text detail message
         eventPayload = { type: "detail", msg: raw };
       }
 
+      // Call event handler (supports both sync and async)
       await Promise.resolve(onEvent(eventPayload));
     }
   }
+}
+
+/**
+ * Read SSE and collect final result
+ * @param {string} endpoint - API endpoint path
+ * @param {object} payload - Request payload
+ * @param {function} onProgress - Optional callback for progress events
+ * @returns {Promise<any>} Final result data
+ */
+export async function readSSEWithResult(endpoint, payload, onProgress = null) {
+  let finalResult = null;
+
+  await readSSE(endpoint, payload, (event) => {
+    if (event.type === "result" || event.type === "complete") {
+      finalResult = event.data || event;
+    }
+
+    if (onProgress) {
+      onProgress(event);
+    }
+  });
+
+  return finalResult;
 }
